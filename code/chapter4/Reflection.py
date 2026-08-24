@@ -105,8 +105,12 @@ class ReflectionAgent:
 
         # --- 1. 初始执行 ---
         print("\n--- 正在进行初始尝试 ---")
+        # 初始提示词
         initial_prompt = INITIAL_PROMPT_TEMPLATE.format(task=task)
+        # 初始调用LLM客户端生成代码
+        # TODO 调用大模型
         initial_code = self._get_llm_response(initial_prompt)
+        # 短期记忆中添加一条执行记录
         self.memory.add_record("execution", initial_code)
 
         # --- 2. 迭代循环：反思与优化 ---
@@ -117,6 +121,8 @@ class ReflectionAgent:
             print("\n-> 正在进行反思...")
             last_code = self.memory.get_last_execution()
             reflect_prompt = REFLECT_PROMPT_TEMPLATE.format(task=task, code=last_code)
+            # 会打印调用模型及调用状态日志
+            # TODO 调用大模型
             feedback = self._get_llm_response(reflect_prompt)
             self.memory.add_record("reflection", feedback)
 
@@ -132,6 +138,7 @@ class ReflectionAgent:
                 last_code_attempt=last_code,
                 feedback=feedback
             )
+            # TODO 调用大模型
             refined_code = self._get_llm_response(refine_prompt)
             self.memory.add_record("execution", refined_code)
         

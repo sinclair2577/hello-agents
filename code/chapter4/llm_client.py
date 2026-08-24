@@ -45,6 +45,7 @@ class HelloAgentsLLM:
                 if not chunk.choices:
                     continue
                 content = chunk.choices[0].delta.content or ""
+                # 打印流式数据结果
                 print(content, end="", flush=True)
                 collected_content.append(content)
             print()  # 在流式输出结束后换行
