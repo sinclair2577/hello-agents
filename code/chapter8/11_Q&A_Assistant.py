@@ -10,9 +10,11 @@
 - 学习回顾和报告生成
 """
 
-from dotenv import load_dotenv
-load_dotenv()
 import os
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+
 import time
 import json
 from datetime import datetime
@@ -32,8 +34,16 @@ class PDFLearningAssistant:
         self.user_id = user_id
         self.session_id = f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-        # 初始化工具
-        self.memory_tool = MemoryTool(user_id=user_id)
+        # 初始化工具。示例配置中的 Neo4j 地址可能仍是占位值；此时跳过
+        # 依赖 Neo4j 的语义记忆，并将学习笔记降级保存到情景记忆。
+        neo4j_uri = os.getenv("NEO4J_URI", "").strip().lower()
+        neo4j_configured = bool(neo4j_uri) and "your-instance" not in neo4j_uri
+        memory_types = ["working", "episodic"]
+        if neo4j_configured:
+            memory_types.append("semantic")
+
+        self.note_memory_type = "semantic" if neo4j_configured else "episodic"
+        self.memory_tool = MemoryTool(user_id=user_id, memory_types=memory_types)
         self.rag_tool = RAGTool(rag_namespace=f"pdf_{user_id}")
 
         # 学习统计
@@ -153,7 +163,7 @@ class PDFLearningAssistant:
         self.memory_tool.run({
             "action":"add",
             "content":content,
-            "memory_type":"semantic",
+            "memory_type":self.note_memory_type,
             "importance":0.8,
             "concept":concept or "general",
             "session_id":self.session_id
